@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/FantasyRL/go-mcp-demo/config"
 	"io"
 	"net"
 	"net/http"
@@ -21,14 +22,14 @@ type ClientOptions struct {
 	RequestTimout time.Duration
 }
 
-// NewClient 创建一个 Ollama 客户端
-func NewClient(opt ClientOptions) *Client {
-	to := opt.RequestTimout
+// NewOllamaClient 创建一个 Ollama 客户端
+func NewOllamaClient() *Client {
+	to := config.Ollama.Options.RequestTimout
 	if to <= 0 {
 		to = 60 * time.Second
 	}
 	return &Client{
-		baseURL: opt.BaseURL,
+		baseURL: config.Ollama.BaseURL,
 		httpClient: &http.Client{
 			Timeout: to,
 			Transport: &http.Transport{

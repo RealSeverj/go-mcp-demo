@@ -5,7 +5,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/FantasyRL/go-mcp-demo/api/model/model"
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
@@ -150,8 +149,7 @@ func (p *ChatRequest) String() string {
 }
 
 type ChatResponse struct {
-	Base     *model.BaseResp `thrift:"base,1" form:"base" json:"base"`
-	Response string          `thrift:"response,2" form:"response" json:"response"`
+	Response string `thrift:"response,1" form:"response" json:"response"`
 }
 
 func NewChatResponse() *ChatResponse {
@@ -161,26 +159,12 @@ func NewChatResponse() *ChatResponse {
 func (p *ChatResponse) InitDefault() {
 }
 
-var ChatResponse_Base_DEFAULT *model.BaseResp
-
-func (p *ChatResponse) GetBase() (v *model.BaseResp) {
-	if !p.IsSetBase() {
-		return ChatResponse_Base_DEFAULT
-	}
-	return p.Base
-}
-
 func (p *ChatResponse) GetResponse() (v string) {
 	return p.Response
 }
 
 var fieldIDToName_ChatResponse = map[int16]string{
-	1: "base",
-	2: "response",
-}
-
-func (p *ChatResponse) IsSetBase() bool {
-	return p.Base != nil
+	1: "response",
 }
 
 func (p *ChatResponse) Read(iprot thrift.TProtocol) (err error) {
@@ -203,16 +187,8 @@ func (p *ChatResponse) Read(iprot thrift.TProtocol) (err error) {
 
 		switch fieldId {
 		case 1:
-			if fieldTypeId == thrift.STRUCT {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 2:
 			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField2(iprot); err != nil {
+				if err = p.ReadField1(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -248,14 +224,6 @@ ReadStructEndError:
 }
 
 func (p *ChatResponse) ReadField1(iprot thrift.TProtocol) error {
-	_field := model.NewBaseResp()
-	if err := _field.Read(iprot); err != nil {
-		return err
-	}
-	p.Base = _field
-	return nil
-}
-func (p *ChatResponse) ReadField2(iprot thrift.TProtocol) error {
 
 	var _field string
 	if v, err := iprot.ReadString(); err != nil {
@@ -277,10 +245,6 @@ func (p *ChatResponse) Write(oprot thrift.TProtocol) (err error) {
 			fieldId = 1
 			goto WriteFieldError
 		}
-		if err = p.writeField2(oprot); err != nil {
-			fieldId = 2
-			goto WriteFieldError
-		}
 	}
 	if err = oprot.WriteFieldStop(); err != nil {
 		goto WriteFieldStopError
@@ -300,24 +264,7 @@ WriteStructEndError:
 }
 
 func (p *ChatResponse) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("base", thrift.STRUCT, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := p.Base.Write(oprot); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *ChatResponse) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("response", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("response", thrift.STRING, 1); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteString(p.Response); err != nil {
@@ -328,9 +275,9 @@ func (p *ChatResponse) writeField2(oprot thrift.TProtocol) (err error) {
 	}
 	return nil
 WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
 WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
 func (p *ChatResponse) String() string {

@@ -2,36 +2,54 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"github.com/west2-online/fzuhelper-server/pkg/constants"
+	"log"
 )
 
-var Cfg Config
+var (
+	Ollama       *ollamaConfig
+	CLI          *cliConfig
+	MCP          *mcpConfig
+	Server       *server
+	Service      *service
+	runtimeViper = viper.New()
+)
 
-func Load(path string) error {
-	v := viper.New()
-	v.SetConfigFile(path)
-	v.SetConfigType("yaml")
+func Load(path string, srv string) {
+	runtimeViper.SetConfigFile(path)
+	runtimeViper.SetConfigType("yaml")
 
-	// 默认值
-	setDefaults(v)
-
-	if err := v.ReadInConfig(); err != nil {
-		return err
+	if err := runtimeViper.ReadInConfig(); err != nil {
+		log.Fatal(err)
+		return
 	}
-	if err := v.Unmarshal(&Cfg); err != nil {
-		return err
+	cfg := new(Config)
+	if err := runtimeViper.Unmarshal(&cfg); err != nil {
+		log.Fatal(err)
+		return
 	}
 
-	return nil
+	Ollama = &cfg.Ollama
+	CLI = &cfg.CLI
+	MCP = &cfg.MCP
+	Server = &cfg.Server
+	Service = getService(srv)
 }
 
-func setDefaults(v *viper.Viper) {
-	v.SetDefault("ollama.base_url", "http://127.0.0.1:11434")
-	v.SetDefault("ollama.model", "qwen3:4b")
-	v.SetDefault("ollama.options.keep_alive", "5m")
-	v.SetDefault("ollama.options.request_timeout", "60s")
-	v.SetDefault("cli.history", true)
-	v.SetDefault("cli.max_turns", 32)
-	v.SetDefault("mcp.server_name", "legend.mcp.demo")
-	v.SetDefault("mcp.transport", "stdio")
-	v.SetDefault("mcp.http_tool.timeout", "10s")
+// GetLoggerLevel 会返回服务的日志等级
+func GetLoggerLevel() string {
+	if Server == nil {
+		return constants.DefaultLogLevel
+	}
+	return Server.LogLevel
+}
+
+func getService(name string) *service {
+	addrList := runtimeViper.GetStringSlice("services." + name + ".addr")
+
+	return &service{
+		Name:     runtimeViper.GetString("services." + name + ".name"),
+		AddrList: addrList,
+		LB:       runtimeViper.GetBool("services." + name + ".load-balance"),
+	}
 }

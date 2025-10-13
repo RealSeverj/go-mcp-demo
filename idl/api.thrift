@@ -16,8 +16,7 @@ struct ChatRequest{
 )
 
 struct ChatResponse{
-    1: model.BaseResp base (api.body="base")
-    2: string response(api.body="response", openapi.property='{
+    1: string response(api.body="response", openapi.property='{
         title: "AI回复",
         description: "AI生成的回复内容",
         type: "string"
@@ -26,7 +25,7 @@ struct ChatResponse{
     openapi.schema='{
         title: "聊天响应",
         description: "包含AI回复的聊天响应",
-        required: ["base", "response"]
+        required: ["response"]
     }'
 )
 

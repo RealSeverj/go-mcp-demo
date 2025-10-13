@@ -1,3 +1,9 @@
+server:
+  private-key: ""
+  version: "1.0"
+  name: go-mcp-demo
+  log-level: "INFO" # OPTIONS: TRACE, DEBUG, INFO(default), NOTICE, WARN, ERROR, FATAL
+
 ollama:
   base_url: "http://127.0.0.1:11434"
   model: "qwen3:4b"
@@ -16,8 +22,37 @@ cli:
   max_turns: 8
 
 mcp:
-  server_name: "fanr.mcp.demo"
-  transport: "stdio"
-  time_tool:
-    enable: true
+  server_name: "legend.mcp.demo"
+  transport: "stdio"   # 可改 "sse" 或 "http"
 
+  stdio:
+    server_cmd: "./bin/mcp-server"
+    server_args: []
+
+  http:
+    mode: "sse"        # "sse" or "http" (Streamable HTTP)
+    base_url: ""       # 直连时填，例如 http://127.0.0.1:8080/mcp
+    init_timeout: "10s"
+    call_timeout: "30s"
+    consul:
+      enable: true
+      address: "127.0.0.1:8500"
+      datacenter: ""
+      token: ""
+      service: "mcp-sse"     # Consul里注册的服务名
+      tag: ""
+      scheme: "http"
+      path: "/mcp"           # SSE/HTTP端点前缀
+
+
+services:
+  api:
+    name: api
+    load-balance: false
+    addr:
+      - 127.0.0.1:10001
+  mcp_server:
+    name: mcp-server
+    load-balance: false
+    addr:
+      - 127.0.0.1:10002

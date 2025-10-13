@@ -4,6 +4,8 @@ package api
 
 import (
 	"context"
+	"github.com/FantasyRL/go-mcp-demo/api/pack"
+	"github.com/FantasyRL/go-mcp-demo/internal/host"
 
 	api "github.com/FantasyRL/go-mcp-demo/api/model/api"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -22,6 +24,11 @@ func Chat(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(api.ChatResponse)
-
-	c.JSON(consts.StatusOK, resp)
+	msg, err := host.NewHost(ctx, clientSet).Chat(1, req.Message)
+	if err != nil {
+		pack.RespError(c, err)
+		return
+	}
+	resp.Response = msg
+	pack.RespData(c, resp)
 }

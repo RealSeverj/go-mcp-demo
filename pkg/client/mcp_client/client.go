@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/FantasyRL/go-mcp-demo/pkg/logger"
+	"github.com/FantasyRL/go-mcp-demo/config"
 	"time"
 
 	mcpc "github.com/mark3labs/mcp-go/client"
@@ -16,40 +16,18 @@ type MCPClient struct {
 	Tools  []mcp.Tool
 }
 
-// NewMCPClient 启动 MCP Server 并建立 stdio 连接
+// NewMCPClient 启动 MCP Server 并建立连接
 func NewMCPClient() (*MCPClient, error) {
-	cmd := "./bin/mcp-server"
-
-	client, err := mcpc.NewStdioMCPClient(cmd, nil)
-	if err != nil {
-		return nil, fmt.Errorf("start stdio client: %w", err)
+	switch config.MCP.Transport {
+	case "stdio", "":
+		return newStdioMCPClient()
+	case "sse":
+		return newSSEMCPClient()
+	case "http":
+		return newHTTPMCPClient()
+	default:
+		return nil, fmt.Errorf("unknown MCP transport: %s", config.MCP.Transport)
 	}
-
-	timeout := 10 * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	// 初始化
-	_, err = client.Initialize(ctx, mcp.InitializeRequest{
-		Params: mcp.InitializeParams{
-			ClientInfo: mcp.Implementation{
-				Name:    "mcp-host",
-				Version: "0.1.0",
-			},
-		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("initialize mcp: %w", err)
-	}
-
-	// 获取工具列表
-	res, err := client.ListTools(ctx, mcp.ListToolsRequest{})
-	if err != nil {
-		return nil, fmt.Errorf("list tools: %w", err)
-	}
-
-	logger.Infof("[mcp-client] discovered %d tools\n", len(res.Tools))
-	return &MCPClient{Client: client, Tools: res.Tools}, nil
 }
 
 // ConvertToolsToOllama 转换 MCP 工具定义到 Ollama 工具格式

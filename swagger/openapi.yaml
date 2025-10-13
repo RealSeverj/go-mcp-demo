@@ -27,23 +27,6 @@ paths:
                                 $ref: '#/components/schemas/ChatResponseBody'
 components:
     schemas:
-        BaseResp:
-            title: 基础响应
-            required:
-                - code
-                - msg
-            type: object
-            properties:
-                code:
-                    title: 状态码
-                    type: integer
-                    description: 响应状态码
-                    format: int64
-                msg:
-                    title: 消息
-                    type: string
-                    description: 响应消息
-            description: 所有响应的基础结构
         ChatRequestBody:
             title: 聊天请求
             required:
@@ -58,12 +41,9 @@ components:
         ChatResponseBody:
             title: 聊天响应
             required:
-                - base
                 - response
             type: object
             properties:
-                base:
-                    $ref: '#/components/schemas/BaseResp'
                 response:
                     title: AI回复
                     type: string

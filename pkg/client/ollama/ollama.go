@@ -1,6 +1,9 @@
 package ollama
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"github.com/FantasyRL/go-mcp-demo/config"
+)
 
 // ToolFunction 工具调用函数
 type ToolFunction struct {
@@ -77,4 +80,21 @@ func ParseToolArguments(raw json.RawMessage) (any, error) {
 
 	// 再兜底：原样返回
 	return string(raw), nil
+}
+
+func BuildOptions() map[string]any {
+	opt := map[string]any{}
+	if config.Ollama.Options.Temperature != nil {
+		opt["temperature"] = *config.Ollama.Options.Temperature
+	}
+	if config.Ollama.Options.TopP != nil {
+		opt["top_p"] = *config.Ollama.Options.TopP
+	}
+	if config.Ollama.Options.TopK != nil {
+		opt["top_k"] = *config.Ollama.Options.TopK
+	}
+	for k, v := range config.Ollama.Options.Extra {
+		opt[k] = v
+	}
+	return opt
 }
