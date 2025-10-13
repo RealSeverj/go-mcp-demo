@@ -1,0 +1,23 @@
+ollama:
+  base_url: "http://127.0.0.1:11434"
+  model: "qwen3:4b"
+  options:
+    request_timeout: "30s"
+    keep_alive: "5m"
+    temperature: 0.2
+    top_p: 0.9
+    top_k: 40
+    max_tokens: 1024
+    extra: { }  # 可选，原样透传到 options
+
+cli:
+  system_prompt: "你是一个可以调用外部工具(MCP)的助手，请在需要时调用合适的工具。"
+  history: true
+  max_turns: 8
+
+mcp:
+  server_name: "fanr.mcp.demo"
+  transport: "stdio"
+  time_tool:
+    enable: true
+
