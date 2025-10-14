@@ -11,6 +11,7 @@ var (
 	CLI          *cliConfig
 	MCP          *mcpConfig
 	Server       *server
+	Registry     *registryConfig
 	Service      *service
 	runtimeViper = viper.New()
 )
@@ -33,6 +34,7 @@ func Load(path string, srv string) {
 	CLI = &cfg.CLI
 	MCP = &cfg.MCP
 	Server = &cfg.Server
+	Registry = &cfg.Registry
 	Service = getService(srv)
 }
 

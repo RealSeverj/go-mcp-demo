@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/FantasyRL/go-mcp-demo/config"
-	"time"
-
 	mcpc "github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -17,14 +15,14 @@ type MCPClient struct {
 }
 
 // NewMCPClient 启动 MCP Server 并建立连接
-func NewMCPClient() (*MCPClient, error) {
+func NewMCPClient(url string) (*MCPClient, error) {
 	switch config.MCP.Transport {
 	case "stdio", "":
 		return newStdioMCPClient()
 	case "sse":
-		return newSSEMCPClient()
+		return newSSEMCPClientWithConn(url)
 	case "http":
-		return newHTTPMCPClient()
+		return newHTTPMCPClientWithConn(url)
 	default:
 		return nil, fmt.Errorf("unknown MCP transport: %s", config.MCP.Transport)
 	}
@@ -52,10 +50,6 @@ func (m *MCPClient) ConvertToolsToOllama() []map[string]any {
 
 // CallTool 调用 MCP 工具
 func (m *MCPClient) CallTool(ctx context.Context, name string, args any) (string, error) {
-	timeout := 30 * time.Second
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	res, err := m.Client.CallTool(ctx, mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      name,

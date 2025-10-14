@@ -16,7 +16,7 @@ OUTPUT_PATH = $(DIR)/output
 API_PATH= $(DIR)/cmd/api
 
 # 服务名
-SERVICES := api host server
+SERVICES := host mcp_server
 service = $(word 1, $@)
 
 # hertz HTTP脚手架
@@ -27,3 +27,12 @@ hertz-gen-api:
 	rm -rf $(DIR)/swagger; \
     thriftgo -g go -p http-swagger $(IDL_PATH)/api.thrift; \
     rm -rf $(DIR)/gen-go
+
+.PHONY: $(SERVICES)
+$(SERVICES):
+	go run $(CMD)/$(service)
+
+.PHONY: stdio
+stdio:
+	go build -o bin/mcp_server ./cmd/mcp_server # windows的output需要是，并且在config.stdio.yaml中修改，bin/mcp-server.exe
+	go run ./cmd/host -cfg $(CONFIG_PATH)/config.stdio.yaml

@@ -1,11 +1,11 @@
 package api
 
 import (
-	"github.com/FantasyRL/go-mcp-demo/pkg/client"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base"
 )
 
-var clientSet *client.ClientSet
+var clientSet *base.ClientSet
 
 func Init() {
-	clientSet = client.NewClientSet(client.WithMCPClient(), client.WithOllamaClient())
+	clientSet = base.NewClientSet(base.WithMCPClient(), base.WithOllamaClient())
 }

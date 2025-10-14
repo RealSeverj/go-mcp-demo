@@ -3,9 +3,9 @@ package host
 import (
 	"context"
 	"github.com/FantasyRL/go-mcp-demo/config"
-	"github.com/FantasyRL/go-mcp-demo/pkg/client"
-	"github.com/FantasyRL/go-mcp-demo/pkg/client/mcp_client"
-	"github.com/FantasyRL/go-mcp-demo/pkg/client/ollama"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base/mcp_client"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base/ollama"
 	"github.com/FantasyRL/go-mcp-demo/pkg/logger"
 )
 
@@ -18,7 +18,7 @@ type Host struct {
 	ollamaCli *ollama.Client
 }
 
-func NewHost(ctx context.Context, clientSet *client.ClientSet) *Host {
+func NewHost(ctx context.Context, clientSet *base.ClientSet) *Host {
 	return &Host{
 		ctx:       ctx,
 		mcpCli:    clientSet.MCPCli,

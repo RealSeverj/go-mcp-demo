@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/FantasyRL/go-mcp-demo/config"
-	"time"
-
+	"github.com/FantasyRL/go-mcp-demo/pkg/constant"
 	mcpc "github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -21,11 +20,7 @@ func newStdioMCPClient() (*MCPClient, error) {
 		return nil, fmt.Errorf("start stdio client: %w", err)
 	}
 
-	initTO := config.MCP.InitTO
-	if initTO <= 0 {
-		initTO = 10 * time.Second
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), initTO)
+	ctx, cancel := context.WithTimeout(context.Background(), constant.MCPClientInitTimeout)
 	defer cancel()
 
 	_, err = client.Initialize(ctx, mcp.InitializeRequest{

@@ -6,7 +6,7 @@ server:
 
 ollama:
   base_url: "http://127.0.0.1:11434"
-  model: "qwen3:4b"
+  model: "qwen3:1.7b"
   options:
     request_timeout: "30s"
     keep_alive: "5m"
@@ -22,32 +22,17 @@ cli:
   max_turns: 8
 
 mcp:
-  server_name: "legend.mcp.demo"
-  transport: "stdio"   # 可改 "sse" 或 "http"
-
+  server_name: "stdio.mcp.demo"
+  transport: "stdio"
   stdio:
-    server_cmd: "./bin/mcp-server"
+    server_cmd: "./bin/mcp-server" # 如果是windows，需要改成 ./bin/mcp-server.exe
     server_args: []
 
-  http:
-    mode: "sse"        # "sse" or "http" (Streamable HTTP)
-    base_url: ""       # 直连时填，例如 http://127.0.0.1:8080/mcp
-    init_timeout: "10s"
-    call_timeout: "30s"
-    consul:
-      enable: true
-      address: "127.0.0.1:8500"
-      datacenter: ""
-      token: ""
-      service: "mcp-sse"     # Consul里注册的服务名
-      tag: ""
-      scheme: "http"
-      path: "/mcp"           # SSE/HTTP端点前缀
 
 
 services:
-  api:
-    name: api
+  host:
+    name: host
     load-balance: false
     addr:
       - 127.0.0.1:10001

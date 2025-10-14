@@ -1,8 +1,9 @@
-package client
+package base
 
 import (
-	"github.com/FantasyRL/go-mcp-demo/pkg/client/mcp_client"
-	"github.com/FantasyRL/go-mcp-demo/pkg/client/ollama"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base/mcp_client"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base/ollama"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base/registry"
 	"sync"
 )
 
@@ -14,9 +15,10 @@ var (
 // ClientSet storage various client objects
 // Notice: some or all of them maybe nil, we should check obj when use
 type ClientSet struct {
-	MCPCli    *mcp_client.MCPClient
-	OllamaCli *ollama.Client
-	cleanups  []func()
+	MCPCli           *mcp_client.MCPClient
+	OllamaCli        *ollama.Client
+	RegistryResolver registry.Resolver
+	cleanups         []func()
 }
 
 type Option func(clientSet *ClientSet)

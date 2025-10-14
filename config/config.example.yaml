@@ -1,0 +1,56 @@
+server:
+  private-key: ""
+  version: "1.0"
+  name: go-mcp-demo
+  log-level: "INFO" # TRACE|DEBUG|INFO|NOTICE|WARN|ERROR|FATAL
+
+ollama:
+  base_url: "http://127.0.0.1:11434"
+  model: "qwen3:1.7b"
+  options:
+    request_timeout: "30s"
+    keep_alive: "5m"
+    temperature: 0.2
+    top_p: 0.9
+    top_k: 40
+    max_tokens: 1024
+    extra: {}
+
+cli:
+  system_prompt: "你是一个可以调用外部工具(MCP)的助手，请在需要时调用合适的工具。"
+  history: true
+  max_turns: 8
+
+mcp:
+  server_name: "http.mcp.demo"
+  transport: "http"  # "stdio" | "sse" | "http"
+  http:
+    mode: "http"           # "sse" | "http" (Streamable HTTP)
+    base_url: "http://127.0.0.1:10002/mcp"# 直连时填，例如 http://127.0.0.1:8080/mcp
+  # stdio:
+  #   server_cmd: "./bin/mcp-server"
+  #   server_args: []
+
+registry:
+  provider: "none"       # "consul" | "none"
+  consul:
+    enable: true
+    address: "127.0.0.1:8500"
+    datacenter: ""
+    token: ""
+    service: "mcp-sse"
+    tag: ""
+    scheme: "http"
+    path: "/mcp"
+
+services:
+  host:
+    name: host
+    load-balance: false
+    addr:
+      - 127.0.0.1:10001
+  mcp_server:
+    name: mcp-server
+    load-balance: false
+    addr:
+      - 127.0.0.1:10002

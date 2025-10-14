@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"github.com/FantasyRL/go-mcp-demo/api/handler/api"
 	"github.com/FantasyRL/go-mcp-demo/api/router"
 	"github.com/FantasyRL/go-mcp-demo/config"
@@ -21,12 +22,13 @@ import (
 )
 
 var (
-	serviceName = "api"
-	configPath  = "./config/config.yaml"
+	serviceName = "host"
+	configPath  = flag.String("cfg", "config/config.yaml", "config file path")
 )
 
 func init() {
-	config.Load(configPath, serviceName)
+	flag.Parse()
+	config.Load(*configPath, serviceName)
 	logger.Init(serviceName, config.GetLoggerLevel())
 	api.Init()
 }
@@ -37,7 +39,8 @@ func main() {
 	// get available port from config set
 	listenAddr, err := utils.GetAvailablePort()
 	if err != nil {
-		logger.Fatalf("Api: get available port failed, err: %v", err)
+		logger.Errorf("Api: get available port failed, err: %v", err)
+		return
 	}
 
 	h := server.New(

@@ -1,43 +1,53 @@
 package main
 
 import (
-	"context"
+	"flag"
 	"github.com/FantasyRL/go-mcp-demo/config"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base/mcp_server"
+	"github.com/FantasyRL/go-mcp-demo/pkg/constant"
 	"github.com/FantasyRL/go-mcp-demo/pkg/logger"
-	"time"
-
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/FantasyRL/go-mcp-demo/pkg/utils"
 )
 
-var serviceName = "mcp_server"
-var configPath = "./config/config.yaml"
+var (
+	serviceName = "mcp_server"
+	configPath  = flag.String("cfg", "config/config.yaml", "config file path")
+)
 
 func init() {
-	config.Load(configPath, serviceName)
+	flag.Parse()
+	config.Load(*configPath, serviceName)
 	logger.Init(serviceName, config.GetLoggerLevel())
 }
+
 func main() {
-	logger.Infof("[mcp] server=%s transport=%s", config.MCP.ServerName, config.MCP.Transport)
-
-	s := server.NewMCPServer(
-		config.MCP.ServerName,
-		"1.0.0",
-		server.WithToolCapabilities(false),
-		server.WithRecovery(),
-	)
-
-	// time_now 工具
-	tool := mcp.NewTool("time_now",
-		mcp.WithDescription("返回当前时间（RFC3339）"),
-	)
-	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		now := time.Now().Format(time.RFC3339)
-		return mcp.NewToolResultText(now), nil
-	})
-
-	// stdio 客户端通过启动 Server 子进程，通过标准输入输出进行消息交换
-	if err := server.ServeStdio(s); err != nil {
-		logger.Fatalf("serve stdio: %v", err)
+	coreServer := mcp_server.NewCoreServer(config.MCP.ServerName, config.MCP.Transport)
+	switch config.MCP.Transport {
+	case constant.MCPTransportStdio:
+		if err := mcp_server.ServeStdio(coreServer); err != nil {
+			logger.Errorf("serve stdio: %v", err)
+			return
+		}
+	case constant.MCPTransportHTTP:
+		addr, err := utils.GetAvailablePort()
+		if err != nil {
+			logger.Errorf("mcp_server: get available port failed, err: %v", err)
+			return
+		}
+		if err := mcp_server.NewStreamableHTTPServer(coreServer).Start(addr); err != nil {
+			logger.Errorf("serve http: %v", err)
+			return
+		}
+	case constant.MCPTransportSSE:
+		addr, err := utils.GetAvailablePort()
+		if err != nil {
+			logger.Errorf("mcp_server: get available port failed, err: %v", err)
+			return
+		}
+		// http与http-sse统一都可以用这个来init
+		if err := mcp_server.NewStreamableHTTPServer(coreServer).Start(addr); err != nil {
+			logger.Errorf("serve http: %v", err)
+			return
+		}
 	}
 }
