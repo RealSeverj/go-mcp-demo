@@ -13,3 +13,17 @@ a demo to learn how to use mcp in go
 ```bash
 make stdio # windows需要修改config.stdio.yaml中的mcp.stdio.server_cmd 为./bin/mcp-server.exe
 ```
+
+## http单点通信
+- registry.provider为none
+- mcp.transport为http
+- mcp.http.base_url为mcp_server的url
+```bash
+make mcp_server
+```
+```bash
+make host #在另一个终端运行
+```
+通过使用API管理平台(apifox/postman等)导入swagger/openapi.yaml，配置环境为host addr，访问接口进行对话
+
+记忆临时通过map来保存在内存中，重启host会丢失

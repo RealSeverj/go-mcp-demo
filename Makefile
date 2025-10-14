@@ -30,7 +30,7 @@ hertz-gen-api:
 
 .PHONY: $(SERVICES)
 $(SERVICES):
-	go run $(CMD)/$(service)
+	go run $(CMD)/$(service) -cfg $(CONFIG_PATH)/config.yaml
 
 .PHONY: stdio
 stdio:
