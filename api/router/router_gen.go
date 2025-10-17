@@ -9,4 +9,5 @@ import (
 // register registers all routers.
 func Register(r *server.Hertz) {
 	GeneratedRegister(r)
+	customizedRegister(r)
 }

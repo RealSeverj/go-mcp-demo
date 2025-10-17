@@ -3,7 +3,7 @@ a demo to learn how to use mcp in go
 
 # 项目结构
 - 直接将hertz HTTP服务作为mcp-host
-- mcp-host与mcp-server通过http/SSE通信
+- mcp-host与mcp-server通过[**streamableHTTP**通信](https://www.51cto.com/article/826884.html)
 - mcp-host与ollama通过http通信
 
 # quick start

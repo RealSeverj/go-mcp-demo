@@ -5,8 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/FantasyRL/go-mcp-demo/config"
+	"github.com/FantasyRL/go-mcp-demo/pkg/logger"
 	mcpc "github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/packages/param"
+	"time"
 )
 
 type MCPClient struct {
@@ -48,17 +52,66 @@ func (m *MCPClient) ConvertToolsToOllama() []map[string]any {
 	return out
 }
 
+// ConvertToolsToOpenAI 将 MCP 工具定义转换为 OpenAI Chat Completions 的 tools 参数
+func (m *MCPClient) ConvertToolsToOpenAI() []openai.ChatCompletionToolUnionParam {
+	out := make([]openai.ChatCompletionToolUnionParam, 0, len(m.Tools))
+	for _, t := range m.Tools {
+		var paramsMap map[string]any
+		if b, _ := json.Marshal(t.InputSchema); len(b) != 0 {
+			_ = json.Unmarshal(b, &paramsMap)
+		}
+
+		var fp openai.FunctionParameters
+		if b, err := json.Marshal(paramsMap); err == nil {
+			_ = json.Unmarshal(b, &fp)
+		}
+		fn := openai.FunctionDefinitionParam{
+			Name:        t.Name,
+			Description: param.Opt[string]{Value: t.Description},
+			Parameters:  fp,
+		}
+		tool := &openai.ChatCompletionFunctionToolParam{
+			Type:     "function",
+			Function: fn,
+		}
+		out = append(out, openai.ChatCompletionToolUnionParam{
+			OfFunction: tool,
+		})
+	}
+	return out
+}
+
 // CallTool 调用 MCP 工具
 func (m *MCPClient) CallTool(ctx context.Context, name string, args any) (string, error) {
+	// 设置进度通知处理
+	m.Client.OnNotification(func(notification mcp.JSONRPCNotification) {
+		logger.Infof("Received notification: %v", notification)
+		if notification.Method == "notifications/progress" {
+			fmt.Println(notification)
+			params := notification.Params.AdditionalFields
+			progress := params["progress"].(float64)
+			total := params["total"].(float64)
+			message := params["message"].(string)
+
+			// 打印进度信息
+			fmt.Printf("Progress: %.2f%% - %s\n", (progress/total)*100, message)
+		}
+	})
+
 	res, err := m.Client.CallTool(ctx, mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      name,
 			Arguments: args,
+			Meta: &mcp.Meta{
+				ProgressToken: time.Now().Unix(),
+			},
 		},
 	})
 	if err != nil {
+		logger.Errorf("call tool %s: %v", name, err)
 		return "", fmt.Errorf("call tool %s: %w", name, err)
 	}
+	fmt.Println(res)
 
 	// 提取返回文本
 	var text string

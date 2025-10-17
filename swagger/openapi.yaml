@@ -25,6 +25,26 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ChatResponseBody'
+    /api/v1/chat/sse:
+        get:
+            tags:
+                - ApiService
+            description: 流式对话
+            operationId: ApiService_ChatSSE
+            parameters:
+                - name: message
+                  in: query
+                  schema:
+                    title: 用户消息
+                    type: string
+                    description: 用户发送的消息内容
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ChatSSEHandlerResponseBody'
 components:
     schemas:
         ChatRequestBody:
@@ -49,5 +69,16 @@ components:
                     type: string
                     description: AI生成的回复内容
             description: 包含AI回复的聊天响应
+        ChatSSEHandlerResponseBody:
+            title: 流式聊天响应
+            required:
+                - response
+            type: object
+            properties:
+                response:
+                    title: AI回复片段
+                    type: string
+                    description: AI生成的回复片段
+            description: 包含AI回复片段的流式聊天响应
 tags:
     - name: ApiService

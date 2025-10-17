@@ -19,8 +19,9 @@ package errno
 
 const (
 	// For microservices
-	SuccessCode = 10000
-	SuccessMsg  = "ok"
+	SuccessCode                  = 10000
+	SuccessMsg                   = "ok"
+	OllamaInternalStopStreamCode = 10001 // 服务内部通知ollama停止流
 
 	// Error
 	/*
@@ -78,6 +79,4 @@ const (
 	InternalTraceErrorCode     = 50020 // Trace错误
 	InternalKafkaErrorCode     = 50021
 	InternalSFErrorCode        = 50022 // snowflake错误
-	// SuccessCodePaper paper在旧版Android中的SuccessCode是2000，用作兼容
-	SuccessCodePaper = 2000
 )

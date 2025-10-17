@@ -8,9 +8,9 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-// newSSEMCPClientWithConn 通过 SSE 连接指定 URL
+// newSSEMCPClientWithConn [MCP规范已废弃]通过 SSE 连接指定 URL
 func newSSEMCPClientWithConn(url string) (*MCPClient, error) {
-	c, err := mcpc.NewSSEMCPClient(url)
+	c, err := mcpc.NewStreamableHttpClient(url)
 	if err != nil {
 		return nil, fmt.Errorf("new sse client: %w", err)
 	}
@@ -18,7 +18,6 @@ func newSSEMCPClientWithConn(url string) (*MCPClient, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), constant.MCPClientInitTimeout)
 	defer cancel()
 
-	// 必须先 Start 再 Initialize
 	if err := c.Start(ctx); err != nil {
 		return nil, fmt.Errorf("sse start: %w", err)
 	}

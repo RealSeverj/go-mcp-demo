@@ -39,7 +39,6 @@ type mcpStdio struct {
 }
 
 type mcpHTTP struct {
-	Mode    string `mapstructure:"mode"`     // "sse" | "http"
 	BaseURL string `mapstructure:"base_url"` // 直连时使用，如 "http://127.0.0.1:8080/mcp"
 }
 

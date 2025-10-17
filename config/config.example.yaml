@@ -23,9 +23,8 @@ cli:
 
 mcp:
   server_name: "http.mcp.demo"
-  transport: "http"  # "stdio" | "sse" | "http"
+  transport: "http"  # "stdio" | "http"
   http:
-    mode: "http"           # "sse" | "http" (Streamable HTTP)
     base_url: "http://127.0.0.1:10002/mcp"# 直连时填，例如 http://127.0.0.1:8080/mcp
   # stdio:
   #   server_cmd: "./bin/mcp-server"
