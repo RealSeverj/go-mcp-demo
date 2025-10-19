@@ -7,6 +7,7 @@
 .DEFAULT_GOAL := help
 # 项目 MODULE 名
 MODULE = github.com/FantasyRL/go-mcp-demo
+REMOTE_REPOSITORY ?= fantasyrl/go-mcp-demo
 # 目录相关
 DIR = $(shell pwd)
 CMD = $(DIR)/cmd
@@ -59,7 +60,7 @@ docker-net:
 
 .PHONY: docker-run-%
 docker-run-%: docker-build-% docker-net
-	@echo ">> Running docker (STRICT config): $* on network $(DOCKER_NET)"
+	@echo ">> Running docker (STRICT config)"
 	CFG_SRC="$(CONFIG_PATH)/config.yaml"; \
 	if [ ! -f "$$CFG_SRC" ]; then \
 	  echo "ERROR: $$CFG_SRC not found. Please create it." >&2; \
@@ -74,7 +75,62 @@ docker-run-%: docker-build-% docker-net
 	  -v "$$CFG_SRC":/app/config/config.yaml:ro \
 	  $(IMAGE_PREFIX)/$*:$(TAG)
 
+.PHONY: pull-run-%
+pull-run-%:
+	@echo ">> Pulling and running docker (STRICT config): $*"
+	@docker pull $(REMOTE_REPOSITORY):$*
+	@CFG_SRC="$(CONFIG_PATH)/config.yaml"; \
+	if [ ! -f "$$CFG_SRC" ]; then \
+	  echo "ERROR: $$CFG_SRC not found. Please create it." >&2; \
+	  exit 2; \
+	fi; \
+	docker rm -f $* >/dev/null 2>&1 || true; \
+	OS_NAME=$$(uname -s 2>/dev/null || echo Windows_NT); \
+	if [ "$$OS_NAME" = "Linux" ]; then \
+	  NET_FLAGS="--network host"; \
+	  PORT_FLAGS=""; \
+	else \
+	  NET_FLAGS=""; \
+	  case "$*" in \
+	    host)       PORT_FLAGS="-p 10001:10001" ;; \
+	    mcp_server) PORT_FLAGS="-p 10002:10002" ;; \
+	    *)          PORT_FLAGS="" ;; \
+	  esac; \
+	fi; \
+	echo ">> OS=$$OS_NAME  NET_FLAGS='$$NET_FLAGS'  PORT_FLAGS='$$PORT_FLAGS'"; \
+	docker run --rm -itd \
+	  --name $* \
+	  $$NET_FLAGS $$PORT_FLAGS \
+	  -e SERVICE=$* \
+	  -e TZ=Asia/Shanghai \
+	  -v "$$CFG_SRC":/app/config/config.yaml:ro \
+	  $(REMOTE_REPOSITORY):$*
+
+
 .PHONY: stdio
 stdio:
 	go build -o bin/mcp_server ./cmd/mcp_server # windows的output需要是.exe，并且在config.stdio.yaml中修改，bin/mcp-server.exe
 	go run ./cmd/host -cfg $(CONFIG_PATH)/config.stdio.yaml
+
+.PHONY: push-%
+push-%:
+	@read -p "Confirm service name to push (type '$*' to confirm): " CONFIRM_SERVICE; \
+	if [ "$$CONFIRM_SERVICE" != "$*" ]; then \
+		echo "Confirmation failed. Expected '$*', but got '$$CONFIRM_SERVICE'."; \
+		exit 1; \
+	fi; \
+	if echo "$(SERVICES)" | grep -wq "$*"; then \
+		if [ "$(ARCH)" = "x86_64" ] || [ "$(ARCH)" = "amd64" ]; then \
+			echo "Building and pushing $* for amd64 architecture..."; \
+			docker build --build-arg SERVICE=$* -t $(REMOTE_REPOSITORY):$* -f docker/Dockerfile .; \
+			docker push $(REMOTE_REPOSITORY):$*; \
+		else \
+			echo "Building and pushing $* using buildx for amd64 architecture..."; \
+			docker buildx build --platform linux/amd64 --build-arg SERVICE=$* -t $(REMOTE_REPOSITORY):$* -f docker/Dockerfile --push .; \
+		fi; \
+	else \
+		echo "Service '$*' is not a valid service. Available: [$(SERVICES)]"; \
+		exit 1; \
+	fi
+
+
