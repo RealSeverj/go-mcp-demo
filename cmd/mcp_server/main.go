@@ -40,6 +40,7 @@ func main() {
 			logger.Errorf("mcp_server: get available port failed, err: %v", err)
 			return
 		}
+		logger.Infof("mcp_server: http server listening at %s", addr)
 		if err := mcp_server.NewStreamableHTTPServer(coreServer).Start(addr); err != nil {
 			logger.Errorf("serve http: %v", err)
 			return
