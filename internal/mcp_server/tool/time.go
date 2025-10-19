@@ -13,7 +13,7 @@ import (
 func WithTimeTool() tool_set.Option {
 	return func(toolSet *tool_set.ToolSet) {
 		newTool := mcp.NewTool(
-			"time.now",
+			"time_now",
 			mcp.WithDescription("返回当前时间（RFC3339）"),
 		)
 		toolFunc := func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {

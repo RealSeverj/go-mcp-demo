@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	Ollama       *ollamaConfig
+	AiProvider   *AiProviderConfig
 	CLI          *cliConfig
 	MCP          *mcpConfig
 	Server       *server
@@ -30,7 +30,7 @@ func Load(path string, srv string) {
 		return
 	}
 
-	Ollama = &cfg.Ollama
+	AiProvider = &cfg.AiProvider
 	CLI = &cfg.CLI
 	MCP = &cfg.MCP
 	Server = &cfg.Server

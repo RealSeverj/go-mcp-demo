@@ -1,6 +1,8 @@
 package config
 
-import "time"
+import (
+	"time"
+)
 
 type server struct {
 	Secret   string `mapstructure:"private-key"`
@@ -19,10 +21,18 @@ type OllamaOptions struct {
 	RequestTimout time.Duration  `mapstructure:"request_timeout"`
 }
 
-type ollamaConfig struct {
-	BaseURL string        `mapstructure:"base_url"` // e.g. http://127.0.0.1:11434
-	Model   string        `mapstructure:"model"`    // e.g. qwen3:1.7b
-	Options OllamaOptions `mapstructure:"options"`
+type AiProviderConfig struct {
+	Mode    string                 `mapstructure:"mode"`
+	BaseURL string                 `mapstructure:"base_url"` // e.g. http://127.0.0.1:11434
+	Model   string                 `mapstructure:"model"`    // e.g. qwen3:1.7b
+	Remote  AiProviderRemoteConfig `mapstructure:"remote"`
+	Options OllamaOptions          `mapstructure:"options"`
+}
+type AiProviderRemoteConfig struct {
+	Provider string `mapstructure:"provider"`
+	BaseURL  string `mapstructure:"base_url"`
+	APIKey   string `mapstructure:"api_key"`
+	Model    string `mapstructure:"model"`
 }
 
 type cliConfig struct {
@@ -77,9 +87,9 @@ type service struct {
 }
 
 type Config struct {
-	Server   server         `mapstructure:"server"`
-	Ollama   ollamaConfig   `mapstructure:"ollama"`
-	CLI      cliConfig      `mapstructure:"cli"`
-	MCP      mcpConfig      `mapstructure:"mcp"`
-	Registry registryConfig `mapstructure:"registry"`
+	Server     server           `mapstructure:"server"`
+	AiProvider AiProviderConfig `mapstructure:"ai_provider"`
+	CLI        cliConfig        `mapstructure:"cli"`
+	MCP        mcpConfig        `mapstructure:"mcp"`
+	Registry   registryConfig   `mapstructure:"registry"`
 }

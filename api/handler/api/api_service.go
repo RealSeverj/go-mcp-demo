@@ -59,13 +59,6 @@ func ChatSSE(ctx context.Context, c *app.RequestContext) {
 		}
 	}
 
-	// 客户端断连 -> 让下游 ctx 取消，终止到 Ollama 的请求
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	go func() {
-		<-ctx.Done()
-	}()
-
 	if err := host.NewHost(ctx, clientSet).StreamChatOpenAI(ctx, 1, req.Message, emit); err != nil {
 		_ = emit("error", map[string]any{"error": err.Error()})
 		return

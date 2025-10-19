@@ -1,4 +1,4 @@
-package ollama
+package ai_provider
 
 import (
 	"encoding/json"
@@ -28,7 +28,7 @@ type Message struct {
 }
 
 type ChatRequest struct {
-	Model     string           `json:"model"`                // Ollama 模型名 如 qwen3:4b
+	Model     string           `json:"model"`                // AiProvider 模型名 如 qwen3:4b
 	Messages  []Message        `json:"messages"`             // 对话历史
 	Tools     []map[string]any `json:"tools,omitempty"`      // 声明给模型能用的工具
 	Options   map[string]any   `json:"options,omitempty"`    // 温度等，这些AI模型参数我不熟
@@ -38,7 +38,7 @@ type ChatRequest struct {
 }
 
 type ChatResponse struct {
-	Model         string  `json:"model"`          // Ollama 模型名 如 qwen3:4b
+	Model         string  `json:"model"`          // AiProvider 模型名 如 qwen3:4b
 	CreatedAt     string  `json:"created_at"`     // 响应时间
 	Message       Message `json:"message"`        // toolCalls不为空时则去执行工具
 	Done          bool    `json:"done"`           // 非流式时总是true，流式时表示是否结束
@@ -84,16 +84,16 @@ func ParseToolArguments(raw json.RawMessage) (any, error) {
 
 func BuildOptions() map[string]any {
 	opt := map[string]any{}
-	if config.Ollama.Options.Temperature != nil {
-		opt["temperature"] = *config.Ollama.Options.Temperature
+	if config.AiProvider.Options.Temperature != nil {
+		opt["temperature"] = *config.AiProvider.Options.Temperature
 	}
-	if config.Ollama.Options.TopP != nil {
-		opt["top_p"] = *config.Ollama.Options.TopP
+	if config.AiProvider.Options.TopP != nil {
+		opt["top_p"] = *config.AiProvider.Options.TopP
 	}
-	if config.Ollama.Options.TopK != nil {
-		opt["top_k"] = *config.Ollama.Options.TopK
+	if config.AiProvider.Options.TopK != nil {
+		opt["top_k"] = *config.AiProvider.Options.TopK
 	}
-	for k, v := range config.Ollama.Options.Extra {
+	for k, v := range config.AiProvider.Options.Extra {
 		opt[k] = v
 	}
 	return opt

@@ -32,7 +32,7 @@ func NewMCPClient(url string) (*MCPClient, error) {
 	}
 }
 
-// ConvertToolsToOllama 转换 MCP 工具定义到 Ollama 工具格式
+// ConvertToolsToOllama 转换 MCP 工具定义到 AiProvider 工具格式
 func (m *MCPClient) ConvertToolsToOllama() []map[string]any {
 	var out []map[string]any
 	for _, t := range m.Tools {
@@ -83,7 +83,7 @@ func (m *MCPClient) ConvertToolsToOpenAI() []openai.ChatCompletionToolUnionParam
 
 // CallTool 调用 MCP 工具
 func (m *MCPClient) CallTool(ctx context.Context, name string, args any) (string, error) {
-	// 设置进度通知处理
+	// 设置进度通知处理（这里应该用不上，是streamable HTTP的特性，太高级了）
 	m.Client.OnNotification(func(notification mcp.JSONRPCNotification) {
 		logger.Infof("Received notification: %v", notification)
 		if notification.Method == "notifications/progress" {
@@ -111,7 +111,6 @@ func (m *MCPClient) CallTool(ctx context.Context, name string, args any) (string
 		logger.Errorf("call tool %s: %v", name, err)
 		return "", fmt.Errorf("call tool %s: %w", name, err)
 	}
-	fmt.Println(res)
 
 	// 提取返回文本
 	var text string

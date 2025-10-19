@@ -3,11 +3,10 @@ package host
 import (
 	"context"
 	"encoding/json"
-	openai "github.com/openai/openai-go/v2"
-
 	"github.com/FantasyRL/go-mcp-demo/config"
 	"github.com/FantasyRL/go-mcp-demo/pkg/constant"
 	"github.com/FantasyRL/go-mcp-demo/pkg/errno"
+	openai "github.com/openai/openai-go/v2"
 )
 
 // 将 OpenAI 的 tool_calls[].function.arguments (string) 解成 map[string]any（与原逻辑一致）
@@ -56,8 +55,8 @@ func (h *Host) StreamChatOpenAI(
 		var acc openai.ChatCompletionAccumulator
 		var needTools bool
 
-		err := h.ollamaCli.ChatStreamOpenAI(ctx, openai.ChatCompletionNewParams{
-			Model:    openai.ChatModel(config.Ollama.Model),
+		err := h.aiProviderCli.ChatStreamOpenAI(ctx, openai.ChatCompletionNewParams{
+			Model:    openai.ChatModel(config.AiProvider.Model),
 			Messages: hist,
 			Tools:    tools,
 		}, func(chunk *openai.ChatCompletionChunk) error {
@@ -86,7 +85,7 @@ func (h *Host) StreamChatOpenAI(
 		}
 
 		// 把已产生的 assistant 文本落历史
-		if assistantBuf != "" {
+		if assistantBuf != "" && !needTools {
 			hist = append(hist, openai.AssistantMessage(assistantBuf))
 		}
 
@@ -104,6 +103,26 @@ func (h *Host) StreamChatOpenAI(
 			_ = emit(constant.SSEEventDone, map[string]any{"reason": "no_tool_details"})
 			return nil
 		}
+
+		toolCallsParam := make([]openai.ChatCompletionMessageToolCallUnionParam, 0, len(acc.Choices[0].Message.ToolCalls))
+		for _, tc := range acc.Choices[0].Message.ToolCalls {
+			toolCallsParam = append(toolCallsParam, openai.ChatCompletionMessageToolCallUnionParam{
+				OfFunction: &openai.ChatCompletionMessageFunctionToolCallParam{
+					ID:   tc.ID,
+					Type: "function",
+					Function: openai.ChatCompletionMessageFunctionToolCallFunctionParam{
+						Name:      tc.Function.Name,
+						Arguments: tc.Function.Arguments, // 注意：这里是字符串
+					},
+				},
+			})
+		}
+		// 根据openAI规范，tool_call前需要一条assistantMsg
+		assistantWithCalls := openai.ChatCompletionAssistantMessageParam{
+			Role:      "assistant",
+			ToolCalls: toolCallsParam,
+		}
+		hist = append(hist, openai.ChatCompletionMessageParamUnion{OfAssistant: &assistantWithCalls})
 
 		for _, tc := range acc.Choices[0].Message.ToolCalls {
 			name := tc.Function.Name

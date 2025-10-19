@@ -1,8 +1,8 @@
 package base
 
 import (
+	"github.com/FantasyRL/go-mcp-demo/pkg/base/ai_provider"
 	"github.com/FantasyRL/go-mcp-demo/pkg/base/mcp_client"
-	"github.com/FantasyRL/go-mcp-demo/pkg/base/ollama"
 	"github.com/FantasyRL/go-mcp-demo/pkg/base/registry"
 	"sync"
 )
@@ -16,7 +16,7 @@ var (
 // Notice: some or all of them maybe nil, we should check obj when use
 type ClientSet struct {
 	MCPCli           *mcp_client.MCPClient
-	OllamaCli        *ollama.Client
+	AiProviderCli    *ai_provider.Client
 	RegistryResolver registry.Resolver
 	cleanups         []func()
 }

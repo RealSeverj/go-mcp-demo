@@ -2,8 +2,8 @@ package base
 
 import (
 	"github.com/FantasyRL/go-mcp-demo/config"
+	"github.com/FantasyRL/go-mcp-demo/pkg/base/ai_provider"
 	"github.com/FantasyRL/go-mcp-demo/pkg/base/mcp_client"
-	"github.com/FantasyRL/go-mcp-demo/pkg/base/ollama"
 	"github.com/FantasyRL/go-mcp-demo/pkg/base/registry/consul"
 	"github.com/FantasyRL/go-mcp-demo/pkg/constant"
 	"log"
@@ -50,9 +50,9 @@ func WithMCPClient() Option {
 	}
 }
 
-func WithOllamaClient() Option {
+func WithAiProviderClient() Option {
 	return func(clientSet *ClientSet) {
-		ollamaCli := ollama.NewOllamaClient()
-		clientSet.OllamaCli = ollamaCli
+		cli := ai_provider.NewAiProviderClient()
+		clientSet.AiProviderCli = cli
 	}
 }

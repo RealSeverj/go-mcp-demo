@@ -7,5 +7,5 @@ import (
 var clientSet *base.ClientSet
 
 func Init() {
-	clientSet = base.NewClientSet(base.WithMCPClient(), base.WithOllamaClient())
+	clientSet = base.NewClientSet(base.WithMCPClient(), base.WithAiProviderClient())
 }
