@@ -125,6 +125,7 @@ help:
 
 
 .PHONY: stdio
+stdio:
 	go build -o bin/mcp_server ./cmd/mcp_server # windows的output需要是.exe，并且在config.stdio.yaml中修改，bin/mcp-server.exe
 	go run ./cmd/host -cfg $(CONFIG_PATH)/config.stdio.yaml
 
