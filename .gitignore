@@ -59,3 +59,5 @@ ca-key
 /log
 /node_modules
 **/vendor/
+config/config.example.yaml
+config/config.stdio.example.yaml

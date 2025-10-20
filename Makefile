@@ -5,11 +5,13 @@
 
 # 默认输出帮助信息
 .DEFAULT_GOAL := help
+
+# 纯 Windows 环境：不强制依赖 WSL/Git Bash，默认使用 cmd，必要逻辑用 PowerShell 执行
 # 项目 MODULE 名
 MODULE = github.com/FantasyRL/go-mcp-demo
 REMOTE_REPOSITORY ?= fantasyrl/go-mcp-demo
-# 目录相关
-DIR = $(shell pwd)
+# 目录相关（避免在 Windows 下调用 pwd 失败，使用内置 CURDIR）
+DIR = $(CURDIR)
 CMD = $(DIR)/cmd
 CONFIG_PATH = $(DIR)/config
 IDL_PATH = $(DIR)/idl
@@ -56,59 +58,73 @@ docker-build-%: vendor
 # 创建 Docker 网络供容器间HTTP通信
 .PHONY: docker-net
 docker-net:
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -ExecutionPolicy Bypass -Command "docker network inspect $(DOCKER_NET) *> $null; if ($$LASTEXITCODE -ne 0) { docker network create $(DOCKER_NET) | Out-Null }"
+else
 	@docker network inspect $(DOCKER_NET) >/dev/null 2>&1 || docker network create $(DOCKER_NET)
+endif
 
 .PHONY: docker-run-%
 docker-run-%: docker-build-% docker-net
-	@echo ">> Running docker (STRICT config)"
-	CFG_SRC="$(CONFIG_PATH)/config.yaml"; \
-	if [ ! -f "$$CFG_SRC" ]; then \
-	  echo "ERROR: $$CFG_SRC not found. Please create it." >&2; \
-	  exit 2; \
-	fi; \
-	docker rm -f $* >/dev/null 2>&1 || true; \
-	docker run --rm -itd \
-	  --name $* \
-      --network host \
-	  -e SERVICE=$* \
-	  -e TZ=Asia/Shanghai \
-	  -v "$$CFG_SRC":/app/config/config.yaml:ro \
-	  $(IMAGE_PREFIX)/$*:$(TAG)
+ifeq ($(OS),Windows_NT)
+		@echo ">> Running docker (STRICT config - Windows)"
+		@powershell -NoProfile -ExecutionPolicy Bypass -File "$(DIR)\scripts\docker-run.ps1" -Service "$*" -Image "$(IMAGE_PREFIX)/$*:$(TAG)" -ConfigPath "$(CONFIG_PATH)\config.yaml"
+else
+		@echo ">> Running docker (STRICT config - Linux)"
+		CFG_SRC="$(CONFIG_PATH)/config.yaml"; \
+		if [ ! -f "$$CFG_SRC" ]; then \
+			echo "ERROR: $$CFG_SRC not found. Please create it." >&2; \
+			exit 2; \
+		fi; \
+		docker rm -f $* >/dev/null 2>&1 || true; \
+		docker run --rm -itd \
+			--name $* \
+			--network host \
+			-e SERVICE=$* \
+			-e TZ=Asia/Shanghai \
+			-v "$$CFG_SRC":/app/config/config.yaml:ro \
+			$(IMAGE_PREFIX)/$*:$(TAG)
+endif
 
 .PHONY: pull-run-%
 pull-run-%:
-	@echo ">> Pulling and running docker (STRICT config): $*"
-	@docker pull $(REMOTE_REPOSITORY):$*
-	@CFG_SRC="$(CONFIG_PATH)/config.yaml"; \
-	if [ ! -f "$$CFG_SRC" ]; then \
-	  echo "ERROR: $$CFG_SRC not found. Please create it." >&2; \
-	  exit 2; \
-	fi; \
-	docker rm -f $* >/dev/null 2>&1 || true; \
-	OS_NAME=$$(uname -s 2>/dev/null || echo Windows_NT); \
-	if [ "$$OS_NAME" = "Linux" ]; then \
-	  NET_FLAGS="--network host"; \
-	  PORT_FLAGS=""; \
-	else \
-	  NET_FLAGS=""; \
-	  case "$*" in \
-	    host)       PORT_FLAGS="-p 10001:10001" ;; \
-	    mcp_server) PORT_FLAGS="-p 10002:10002" ;; \
-	    *)          PORT_FLAGS="" ;; \
-	  esac; \
-	fi; \
-	echo ">> OS=$$OS_NAME  NET_FLAGS='$$NET_FLAGS'  PORT_FLAGS='$$PORT_FLAGS'"; \
-	docker run --rm -itd \
-	  --name $* \
-	  $$NET_FLAGS $$PORT_FLAGS \
-	  -e SERVICE=$* \
-	  -e TZ=Asia/Shanghai \
-	  -v "$$CFG_SRC":/app/config/config.yaml:ro \
-	  $(REMOTE_REPOSITORY):$*
+ifeq ($(OS),Windows_NT)
+		@echo ">> Pulling and running docker (STRICT config - Windows): $*"
+		@docker pull $(REMOTE_REPOSITORY):$*
+		@powershell -NoProfile -ExecutionPolicy Bypass -File "$(DIR)\scripts\docker-run.ps1" -Service "$*" -Image "$(REMOTE_REPOSITORY):$*" -ConfigPath "$(CONFIG_PATH)\config.yaml"
+else
+		@echo ">> Pulling and running docker (STRICT config - Linux): $*"
+		@docker pull $(REMOTE_REPOSITORY):$*
+		@CFG_SRC="$(CONFIG_PATH)/config.yaml"; \
+		if [ ! -f "$$CFG_SRC" ]; then \
+			echo "ERROR: $$CFG_SRC not found. Please create it." >&2; \
+			exit 2; \
+		fi; \
+		docker rm -f $* >/dev/null 2>&1 || true; \
+		docker run --rm -itd \
+			--name $* \
+			--network host \
+			-e SERVICE=$* \
+			-e TZ=Asia/Shanghai \
+			-v "$$CFG_SRC":/app/config/config.yaml:ro \
+			$(REMOTE_REPOSITORY):$*
+endif
+
+# 帮助信息
+.PHONY: help
+help:
+	@echo "Available targets:"; \
+	echo "  host                 - go run cmd/host with config.yaml"; \
+	echo "  mcp_server           - go run cmd/mcp_server with config.yaml"; \
+	echo "  vendor               - go mod tidy && vendor"; \
+	echo "  docker-build-<svc>   - build image for service (host|mcp_server)"; \
+	echo "  docker-run-<svc>     - run container (Windows自动映射端口, Linux使用--network host)"; \
+	echo "  pull-run-<svc>       - pull and run container (同上)"; \
+	echo "  stdio                - build mcp_server and run host with stdio config"; \
+	echo "  push-<svc>           - push image to remote repo"
 
 
 .PHONY: stdio
-stdio:
 	go build -o bin/mcp_server ./cmd/mcp_server # windows的output需要是.exe，并且在config.stdio.yaml中修改，bin/mcp-server.exe
 	go run ./cmd/host -cfg $(CONFIG_PATH)/config.stdio.yaml
 
